@@ -1,0 +1,101 @@
+{#
+ * This file is part of the OpenCart Shipping module of DPD Nederland B.V.
+ *
+ * Copyright (C) 2018  DPD Nederland B.V.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ #}
+<html>
+  <head>
+    <title>DPD Shipping List</title>
+    <style>
+      @media print {
+        @page {
+          margin: 0;
+          size: A4 landscape;
+        }
+        td {
+          font-size: 12px;
+        }
+      }
+        body {
+          margin: 1cm;
+        }
+        thead td {
+          border-bottom: 1px solid black;
+        }
+        td {
+          padding-right: 15px;
+        }
+    </style>
+  </head>
+  <body>
+
+  <table style="width: 100%; ">
+    <tr>
+      <td style=" text-align: left; ">
+        <br /> Klantadres
+        <br /> {{ sender.name1 }}
+        <br /> {{ sender.street }}
+        <br /> {{ sender.country }}-{{ sender.postalcode }} {{ sender.city }}
+      </td>
+      <td style="text-align: left;">
+        <br /> Datum: {{ "now"|date("d-m-Y") }}
+        <br /> Aantal pakketten: {{ list|length }}
+      </td>
+      <td style=" text-align: right; ">
+        {% if logo_path %}
+        <img src="{{ logo_path }}" style="width:50px; height:50px;" />
+        {% endif %}
+      </td>
+
+    </tr>
+  </table>
+
+
+  <table style="width: 100%; ">
+    <thead>
+    <tr>
+      <td>Nr.</td>
+      <td>Pakket Nr.</td>
+      <td>Type verzending</td>
+      <td>Bedrijf en naam</td>
+      <td>Adres</td>
+      <td>Postcode</td>
+      <td>Plaats</td>
+      <td>Referentie</td>
+      <td>Gewicht</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for key, parcel in list %}
+    <tr>
+      <td> {{ key + 1 }} </td>
+      <td> {{ parcel.parcelLabelNumber }} </td>
+      <td> {{ parcel.carrierName }} </td>
+      <td> {{ parcel.customerName }} </td>
+      <td> {{ parcel.address }} </td>
+      <td> {{ parcel.zipCode }} </td>
+      <td> {{ parcel.city }} </td>
+      <td> {{ parcel.referenceNumber }} </td>
+      <td> {{ parcel.weight }} </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if list is empty %}
+  Geen DPD verzending geselecteerd.
+  {% endif %}
+  </body>
+</html>

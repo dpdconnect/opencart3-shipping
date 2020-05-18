@@ -1,0 +1,229 @@
+.nopadding {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.search-container {
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    z-index: 2;
+    box-shadow: 0 10px 10px -10px rgba(0,0,0,0.25);
+}
+.search-container form {
+    margin:0;
+}
+.map {
+    width:100%;
+    height: calc(100% - 79px);
+    background: #ddd;
+    margin-top:79px;
+}
+.sidebar {
+    overflow-x: auto;
+    height: calc(100% - 79px);
+    margin-top:79px;
+}
+.sidebar ul li div {
+    border-bottom: 1px solid #e6e7e7;
+    color:black;
+    display:block;
+    padding: 15px;
+    cursor: pointer;
+}
+.sidebar ul li div:hover,
+.sidebar ul li div:focus{
+    border-left: 3px solid #d7002c;
+    padding-left: 12px;
+    text-decoration: none;
+}
+
+.sidebar .company {
+    font-family: 'Lato', sans-serif;;
+    font-size: 16px;
+    text-transform: uppercase;
+}
+.logo {
+    background-color: #fff;
+    height:79px;
+    text-align: center;
+}
+.logo img {
+    margin:0 auto;
+    width:auto;
+    height:100%;
+}
+.search-button {
+    background-color:#d7002c;
+    color: #ffffff;
+}
+.formholder {
+    position: relative;
+    width:100%;
+    height:100%;
+}
+.search-input {
+    height: 79px;
+    border-radius: 0;
+    font-family: 'Lato', sans-serif;
+    border-right:0px;
+    border-bottom:0px;
+    border-top:0px;
+    font-size:20px;
+    font-weight:300;
+}
+.setup-form {
+    width:100%;
+    position:absolute;
+    top:50%;
+    left:50%;
+    -webkit-transform: translate(-50%,-50%);
+    -moz-transform: translate(-50%,-50%);
+    -ms-transform: translateX(-50%) translateY(-50%);
+    -o-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+}
+
+.setup-button {
+    width:100%;
+}
+
+.info-modal-content {
+    max-width:400px;
+    min-width:300px;
+}
+.info-modal-content img {
+    margin-bottom:5px;
+}
+.info-modal-content p {
+    margin:0;
+
+}
+.modal-title {
+    float:right;
+    font-size:20px;
+    margin:10px 0px 0px 10px;
+}
+.modal-week-row {
+    border-bottom:1px solid #ddd;
+    padding:5px 0;
+}
+.modal-day {
+    float:left;
+    margin-right:10px;
+    display:inline-block;
+    width:33.3%;
+}
+.modal-link a{
+    display:block;
+    padding:15px 0 10px 0;
+    color:#d7002c;
+}
+@media (max-width: 990px) {
+    .sidebar {
+        display: none;
+    }
+}
+@media (max-width: 768px) {
+    .search-input,
+    .logo  {
+        height:50px;
+        font-size:16px;
+        border-left:0px;
+        border-top:1px solid #ddd;
+    }
+    .city {
+        border-left:1px solid #ddd;
+    }
+    #googlemaps {
+        display: none;
+    }
+    #googlemap_shops {
+        display: block;
+    }
+
+}
+@media (max-width: 416px) {
+    .search-input,
+    .logo  {
+        height:40px;
+        font-size:14px;
+        border-left:0px;
+        border-top:1px solid #ddd;
+    }
+    .logo {
+        height:50px;
+    }
+    .info-modal-content {
+        width:250px;
+    }
+}
+@media (min-width: 768px) {
+    #googlemaps {
+        display: block;
+    }
+    #googlemap_shops {
+        display: none ;
+    }
+    .parcel_modal {
+        display: none ;
+    }
+}
+#parcelshops ul {
+    border: 1px solid #d6d4d4;
+    list-style-type: none;
+}
+#parcelshops .sidebar_single {
+    background-color: white;
+    border-bottom: 1px solid #e6e7e7;
+    color: black;
+    display: block;
+    padding: 15px;
+}
+#parcelshops .sidebar_single .company {
+    font-size: 16px;
+    text-transform: uppercase;
+}
+#parcelshops .sidebar_single .modal-link a {
+    padding: 15px 0 0 0;
+}
+#parcelshops .ParcelShops {
+    cursor: pointer;
+}
+#parcelshops .parcel_modal {
+    display: none;
+}
+.go-back {
+    height: 25px;
+    width: 25px;
+    float: right;
+    cursor: pointer;
+    margin: 10px 0px 0px 10px;
+    color: black;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 2px;
+    font-size: 15px;
+    text-align: center;
+}
+#parcelshops .more-information {
+    cursor: pointer;
+}
+
+#googlemap_shops {
+    width: 100%;
+    padding-left: 0;
+}
+
+.selected-parcelshop{
+    border: 1px solid #d6d4d4;
+    background-color: white;
+    padding: 15px;
+}
+
+#parcelshops {
+    padding-bottom: 10px;
+}
+.dpd-parcelshop-information {
+    padding: 15px;
+}

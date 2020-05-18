@@ -1,0 +1,585 @@
+{#
+ * This file is part of the OpenCart Shipping module of DPD Nederland B.V.
+ *
+ * Copyright (C) 2018  DPD Nederland B.V.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ #}
+{{ header }} {{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <button type="submit" form="dpdbenelux-account-module" data-toggle="tooltip" title="{{ button_save }}"
+                class="btn btn-primary"><i class="fa fa-save"></i></button>
+        <a href="{{ cancel_link }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i
+                  class="fa fa-reply"></i></a>
+      </div>
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li><a href="{{ breadcrumb['href'] }}">{{ breadcrumb['text'] }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% for error in errors %}
+      <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> {{ error }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endfor %}
+
+    {% if shipping_dpdbenelux_status == 0 %}
+      <div class="alert alert-warning"><i class="fa fa-question-circle"></i> {{ dpdbenelux_disabled_message }}
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+      </div>
+    {% endif %}
+
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ text_edit }}</h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-shipping"
+              class="form-horizontal">
+          <div class="row">
+            <div class="col-sm-2">
+              <script>
+                $(document).ready(function(){
+                    $('#input-account-type').on('change', function() {
+                        handleAccountType();
+                    });
+
+                    // Initial call for pageload
+                    handleAccountType();
+
+                    function handleAccountType() {
+                        accountType = $('#input-account-type').val();
+                        if(accountType === 'B2B') {
+                            $('li[data-type="B2B"]').show();
+                            $('li[data-type="B2C"]').hide();
+                        }
+                        else if(accountType === 'B2C') {
+                            $('li[data-type="B2B"]').hide();
+                            $('li[data-type="B2C"]').show();
+                        }
+                        else {
+                            $('li[data-type="B2B"]').hide();
+                            $('li[data-type="B2C"]').hide();
+                        }
+                    }
+                })
+              </script>
+              <ul class="nav nav-pills nav-stacked">
+                <li class="active"><a href="#tab-general" data-toggle="tab">{{ tab_general }}</a></li>
+                {% for carrierKey, carrierData in carrier_names %}
+                    <li data-type="{{ carrierData.type }}"><a href="#tab-{{ carrierKey }}" data-toggle="tab">{{ carrierData.name }}</a></li>
+                {% endfor %}
+                <li><a href="#tab-advanced" data-toggle="tab">{{ tab_advanced }}</a></li>
+              </ul>
+            </div>
+            <div class="col-sm-10">
+              <div class="tab-content">
+
+                {{ block('general_tab') }}
+
+                {% for carrierKey, carrierData in carrier_names %}
+                  {# Note: Don't check for B2C or B2B here, these fields need to load otherwise they won't be saved
+                  B2C fields won't be saved when you have B2B selected thus causing data loss#}
+                    {{ block('shipping_methods_tabs') }}
+                {% endfor %}
+
+                {{ block('advanced_tab') }}
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}
+{% if false %}
+{# Simple cheat to prevent these blocks from rendering output since they're defined in the root
+We only want to show them where they're called with block() and still seperate everything to kepe it cleaner#}
+  {% block general_tab %}
+  <div class="tab-pane active" id="tab-general">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ account_settings }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-status">{{ general_status }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_status" id="input-status" class="form-control">
+              <option value="1" {% if shipping_dpdbenelux_status == 1 %} selected {% endif %}>{{ text_enabled }}</option>
+              <option value="0" {% if shipping_dpdbenelux_status == 0 %} selected {% endif %}>{{ text_disabled }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-username">{{ username }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-username" name="shipping_dpdbenelux_username" type="text"
+                   value="{{ shipping_dpdbenelux_username }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-password"> {{ password }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-password" name="shipping_dpdbenelux_password"
+                   type="password"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-sending-depot">{{ sending_depot }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-sending-depot" name="shipping_dpdbenelux_sending_depot" type="text"
+                   value="{{ shipping_dpdbenelux_sending_depot }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-account-type">{{ account_type }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_account_type" id="input-account-type" class="form-control">
+              <option value="0">{{ select_account_type }}</option>
+              <option {% if shipping_dpdbenelux_account_type == 'B2C' %} selected {% endif %}
+                      value="B2C">{{ b2c }}</option>
+              <option {% if shipping_dpdbenelux_account_type == 'B2B' %} selected {% endif %}
+                      value="B2B">{{ b2b }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-paper-format">{{ paper_format }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_paper_format" id="input-paper-format" class="form-control">
+              <option value="0">{{ select_paper_format }}</option>
+              <option {% if shipping_dpdbenelux_paper_format==  a4 %} selected {% endif %}
+                      value="{{ a4 }}">{{ a4 }}</option>
+              <option {% if shipping_dpdbenelux_paper_format == a6 %} selected {% endif %}
+                      value="{{ a6 }}">{{ a6 }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-include-return-label">{{ include_return_label }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_include_return_label" id="input-include-return-label" class="form-control">
+              <option value="1" {% if shipping_dpdbenelux_include_return_label == 1 %} selected {% endif %}>{{ text_enabled }}</option>
+              <option value="0" {% if shipping_dpdbenelux_include_return_label == 0 %} selected {% endif %}>{{ text_disabled }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-weight-default">{{ weight_default }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-weight-default" name="shipping_dpdbenelux_weight_default"
+                   value="{{ shipping_dpdbenelux_weight_default }}" type="text"/>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ sending_address }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-company-name">{{ company_name }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-company-name" name="shipping_dpdbenelux_sender_company_name"
+                   value="{{ shipping_dpdbenelux_sender_company_name }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-street">{{ street_housenumber }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-street" name="shipping_dpdbenelux_sender_street"
+                   value="{{ shipping_dpdbenelux_sender_street }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-postal-code">{{ postal_code }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-postal-code" name="shipping_dpdbenelux_sender_postal_code"
+                   value="{{ shipping_dpdbenelux_sender_postal_code }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-place">{{ place }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-place" name="shipping_dpdbenelux_sender_place"
+                   value="{{ shipping_dpdbenelux_sender_place }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-country-code">{{ country_code }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_sender_country_code" id="input-country-code" class="form-control">
+                {% for country in countries %}
+                  <option value="{{ country.iso_code_2 }}" {% if shipping_dpdbenelux_sender_country_code == country.iso_code_2 %} selected {% endif %}>{{ country.name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-sender-phone">{{ sender_phone }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-sender-phone" name="shipping_dpdbenelux_sender_phone" type="text"
+                   value="{{ shipping_dpdbenelux_sender_phone }}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-consignor-eori-number"><span data-toggle="tooltip" title="{{ consignor_eori_number_help }}">{{ consignor_eori_number }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-consignor-eori-number" name="shipping_dpdbenelux_consignor_eori_number" type="text"
+                   value="{{ shipping_dpdbenelux_consignor_eori_number }}"/>
+          </div>
+        </div>
+
+      </div>
+    </div> {# end sending address panel #}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{ export_title }}</h3>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-hsc-source">{{ export_hsc_source }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_export_hsc_source" id="input-export-hsc-source" class="form-control">
+                {% for id, name in attribute_sources %}
+                  <option value="{{ id }}" {% if shipping_dpdbenelux_export_hsc_source == id %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-hsc-default">{{ export_hsc_default }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-export-hsc-default" name="shipping_dpdbenelux_export_hsc_default"
+                   value="{{ shipping_dpdbenelux_export_hsc_default }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-value-source">{{ export_value_source }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_export_value_source" id="input-export-value-source" class="form-control">
+                {% for id, name in attribute_sources %}
+                  <option value="{{ id }}" {% if shipping_dpdbenelux_export_value_source == id %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-origin-country-source">{{ export_origin_country_source }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_export_origin_country_source" id="input-export-origin-country-source" class="form-control">
+                {% for id, name in attribute_sources %}
+                  <option value="{{ id }}" {% if shipping_dpdbenelux_export_origin_country_source == id %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-origin-country-default">{{ export_origin_country_default }}</label>
+          <div class="col-sm-10">
+            <input class="form-control" id="input-export-origin-country-default" name="shipping_dpdbenelux_export_origin_country_default"
+                   value="{{ shipping_dpdbenelux_export_origin_country_default }}" type="text"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label" for="input-export-vat-number-source">{{ export_vat_number_source }}</label>
+          <div class="col-sm-10">
+            <select name="shipping_dpdbenelux_export_vat_number_source" id="input-export-vat-number-source" class="form-control">
+                {% for field in custom_fields %}
+                  <option value="{{ field.custom_field_id }}" {% if shipping_dpdbenelux_export_vat_number_source == field.custom_field_id %} selected {% endif %}>{{ field.name }}</option>
+                {% endfor %}
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div> {# end export panel #}
+  </div>
+  {% endblock %}
+
+  {% block shipping_methods_tabs %}
+    <div class="tab-pane" id="tab-{{ carrierKey }}">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">{{ carrierData.name }}</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-{{ carrierKey }}-title">{{ title }}</label>
+            <div class="col-sm-10">
+              <input class="form-control" id="input-{{ carrierKey }}-title"
+                     name="shipping_dpdbenelux_{{ carrierKey }}_title" type="text"
+                     placeholder="{{ carrierData.name }}"
+                     value="{{ shipping_dpdbenelux[carrierKey].title }}"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-description">{{ description }}</label>
+            <div class="col-sm-10">
+              <input class="form-control" id="input-{{ carrierKey }}-description"
+                     name="shipping_dpdbenelux_{{ carrierKey }}_description"
+                     type="text" placeholder="{{ carrierData.description }}"
+                     value="{{ shipping_dpdbenelux[carrierKey].description }}"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-cost">{{ entry_cost }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_cost"
+                     value="{{ shipping_dpdbenelux[carrierKey].cost }}"
+                     placeholder="{{ entry_cost }}" id="input-{{ carrierKey }}-cost"
+                     class="form-control"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-tax-class">{{ entry_tax_class }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_dpdbenelux_{{ carrierKey }}_tax_class_id"
+                      id="input-{{ carrierKey }}-tax-class" class="form-control">
+                <option value="0">{{ text_none }}</option>
+                {% for tax_class in tax_classes %}
+                  {% if tax_class.tax_class_id == shipping_dpdbenelux[carrierKey].tax_class_id %}
+                    <option value="{{ tax_class.tax_class_id }}"
+                            selected="selected">{{ tax_class.title }}</option>
+                  {% else %}
+                    <option value="{{ tax_class.tax_class_id }}">{{ tax_class.title }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-geo-zone">{{ entry_geo_zone }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_dpdbenelux_{{ carrierKey }}_geo_zone_id"
+                      id="input-{{ carrierKey }}-geo-zone" class="form-control">
+                <option value="0">{{ text_all_zones }}</option>
+                {% for geo_zone in geo_zones %}
+                  {% if geo_zone.geo_zone_id == shipping_dpdbenelux[carrierKey].geo_zone_id %}
+                    <option value="{{ geo_zone.geo_zone_id }}"
+                            selected="selected">{{ geo_zone.name }}</option>
+                  {% else %}
+                    <option value="{{ geo_zone.geo_zone_id }}">{{ geo_zone.name }}</option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-status">{{ entry_status }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_dpdbenelux_{{ carrierKey }}_status"
+                      id="input-{{ carrierKey }}-status" class="form-control">
+                <option value="1" {% if shipping_dpdbenelux[carrierKey].status == 1 %} selected {% endif %}>{{ text_enabled }}</option>
+                <option value="0" {% if shipping_dpdbenelux[carrierKey].status == 0 %} selected {% endif %}>{{ text_disabled }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"
+                   for="input-{{ carrierKey }}-sort-order">{{ entry_sort_order }}</label>
+            <div class="col-sm-10">
+              <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_sort_order"
+                     value="{{ shipping_dpdbenelux[carrierKey].sort_order }}"
+                     placeholder="{{ entry_sort_order }}"
+                     id="input-{{ carrierKey }}-sort-order" class="form-control"/>
+            </div>
+          </div>
+          {% if carrierKey == 'parcelshop' %}
+              {{ block('carrier_parcelshop_fields') }}
+          {% elseif carrierKey == 'saturday' or carrierKey == 'classic_saturday' %}
+              {{ block('carrier_saturday_fields') }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block carrier_parcelshop_fields %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-google-maps-api-client-key">{{ entry_google_maps_api_client_key }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_google_maps_api_client_key"
+               value="{{ shipping_dpdbenelux[carrierKey].google_maps_api_client_key }}"
+               placeholder="{{ entry_google_maps_api_client_key }}"
+               id="input-{{ carrierKey }}-google-maps-api-client-key" class="form-control"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-google-maps-api-server-key">{{ entry_google_maps_api_server_key }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_google_maps_api_server_key"
+               value="{{ shipping_dpdbenelux[carrierKey].google_maps_api_server_key }}"
+               placeholder="{{ entry_google_maps_api_server_key }}"
+               id="input-{{ carrierKey }}-google-maps-api-server-key" class="form-control"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-google-maps-width">{{ entry_google_maps_width }}</label>
+      <div class="col-sm-8">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_google_maps_width"
+               value="{{ shipping_dpdbenelux[carrierKey].google_maps_width }}"
+               placeholder="{{ entry_google_maps_width }}"
+               id="input-{{ carrierKey }}-google-maps-width" class="form-control"/>
+      </div>
+      <div class="col-sm-2">
+        <select name="shipping_dpdbenelux_{{ carrierKey }}_google_maps_width_type"
+                id="input-{{ carrierKey }}-google-maps-width-type" class="form-control">
+          <option value="pixels" {% if shipping_dpdbenelux[carrierKey].google_maps_width_type == 'pixels' %} selected {% endif %}>{{ text_pixels }}</option>
+          <option value="percentage" {% if shipping_dpdbenelux[carrierKey].google_maps_width_type == 'percentage' %} selected {% endif %}>{{ text_percentage }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-google-maps-height">{{ entry_google_maps_height }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_google_maps_height"
+               value="{{ shipping_dpdbenelux[carrierKey].google_maps_height }}"
+               placeholder="{{ entry_google_maps_height }}"
+               id="input-{{ carrierKey }}-google-maps-height" class="form-control"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-number-of-shops">{{ entry_number_of_shops }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_number_of_shops"
+               value="{{ shipping_dpdbenelux[carrierKey].number_of_shops }}"
+               placeholder="{{ entry_number_of_shops }}"
+               id="input-{{ carrierKey }}-number-of-shops" class="form-control"/>
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block carrier_saturday_fields %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-show-from-day">{{ entry_show_from_day }}</label>
+      <div class="col-sm-10">
+        <select name="shipping_dpdbenelux_{{ carrierKey }}_show_from_day"
+                id="input-{{ carrierKey }}-show-from-day" class="form-control">
+          {% for key, value in days %}
+            <option value="{{ key }}" {% if shipping_dpdbenelux[carrierKey].show_from_day == key %} selected {% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-show-from-time">{{ entry_show_from_time }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_show_from_time"
+               value="{{ shipping_dpdbenelux[carrierKey].show_from_time }}"
+               placeholder="{{ entry_show_from_time }}"
+               id="input-{{ carrierKey }}-show-from-time" class="form-control"/><br>
+        {{ text_using_timezone }}: {{ timezone }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-show-till-day">{{ entry_show_till_day }}</label>
+      <div class="col-sm-10">
+        <select name="shipping_dpdbenelux_{{ carrierKey }}_show_till_day"
+                id="input-{{ carrierKey }}-show-till-day" class="form-control">
+          {% for key, value in days %}
+            <option value="{{ key }}" {% if shipping_dpdbenelux[carrierKey].show_till_day == key %} selected {% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-2 control-label"
+             for="input-{{ carrierKey }}-show-till-time">{{ entry_show_till_time }}</label>
+      <div class="col-sm-10">
+        <input type="text" name="shipping_dpdbenelux_{{ carrierKey }}_show_till_time"
+               value="{{ shipping_dpdbenelux[carrierKey].show_till_time }}"
+               placeholder="{{ entry_show_till_time }}"
+               id="input-{{ carrierKey }}-show-till-time" class="form-control"/><br>
+        {{ text_using_timezone }}: {{ timezone }}
+      </div>
+    </div>
+  {% endblock %}
+
+  {% block advanced_tab %}
+    <div class="tab-pane active" id="tab-advanced">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">{{ advanced_settings }}</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-url">{{ url }}</label>
+            <div class="col-sm-10">
+              <input class="form-control" id="input-url" name="shipping_dpdbenelux_url" type="text"
+                     value="{{ shipping_dpdbenelux_url }}"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-environment">{{ environment }}</label>
+            <div class="col-sm-10">
+              <select name="shipping_dpdbenelux_environment" id="input-environment" class="form-control">
+                <option value="0">{{ select_environment }}</option>
+                <option value="1"{% if shipping_dpdbenelux_environment == 1 %} selected{% endif %}>{{ live }}</option>
+                <option value="2"{% if shipping_dpdbenelux_environment == 2 %} selected{% endif %}>{{ demo }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label"><span data-toggle="tooltip" title="{{ asynchronous_help }}">{{ asynchronous }}</span></label>
+            <div class="col-sm-10">
+              <label class="radio-inline">
+                <input type="radio" name="shipping_dpdbenelux_asynchronous" value="1" {% if shipping_dpdbenelux_asynchronous %}checked="checked"{% endif %}/>
+                {{ text_yes }}
+              </label>
+              <label class="radio-inline">
+                <input type="radio" name="shipping_dpdbenelux_asynchronous" value="0" {% if not shipping_dpdbenelux_asynchronous %}checked="checked"{% endif %}/>
+                {{ text_no }}
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label" for="input-asynchronous-from">{{ asynchronous_from }}</label>
+            <div class="col-sm-10">
+              <input class="form-control" id="input-asynchronous-from" name="shipping_dpdbenelux_asynchronous_from" type="text"
+                     value="{{ shipping_dpdbenelux_asynchronous_from }}"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+
+{% endif %}

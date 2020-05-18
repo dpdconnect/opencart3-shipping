@@ -1,0 +1,33 @@
+{
+  "name": "dpd-plugins/opencart",
+  "description": "DPD OpenCart Shipping extension",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "DPD",
+      "email": "pluginsupport@dpd.nl",
+      "homepage": "http://www.dpd.nl"
+    }
+  ],
+  "support": {
+    "email": "pluginsupport@dpd.nl",
+    "issues": "http://www.dpd.nl/"
+  },
+  "autoload": {
+    "psr-4": {
+      "DpdConnect\\": "."
+    }
+  },
+  "require": {
+    "php": "^5.6 || ^7.0",
+    "ext-json": "*",
+    "dpdconnect/php-sdk": "^1.0"
+  },
+  "minimum-stability": "dev",
+  "require-dev": {
+    "phpunit/phpunit": "^5.7"
+  },
+  "config": {
+    "vendor-dir": "./vendor/"
+  }
+}

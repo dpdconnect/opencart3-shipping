@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>DPD Benelux Default</name>
+    <version>1.0.1</version>
+    <author>DPD Nederland B.V.</author>
+    <code>dpdbenelux_shipping</code>
+    <file path="catalog/controller/checkout/checkout.php">
+        <operation>
+            <search><![CDATA[$data['breadcrumbs'] = array();]]></search>
+            <add position="before"><![CDATA[
+            $googleMapApiKey = $this->config->get('shipping_dpdbenelux_parcelshop_google_maps_api_client_key');
+            $this->document->addScript('catalog/view/javascript/dpd/parcelshop.js');
+            $this->document->addStyle('catalog/view/theme/default/stylesheet/dpd.css');
+            $this->document->addScript('https://maps.googleapis.com/maps/api/js?key=' . $googleMapApiKey);
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/checkout/confirm.php">
+        <operation>
+            <search><![CDATA[$order_data['products'] = array();]]></search>
+            <add position="before"><![CDATA[
+            if($this->session->data['shipping_method']['code'] === 'dpdbenelux.parcelshop')
+            {
+                $order_data['shipping_firstname'] = 'DPD Parcelshop:';
+                $order_data['shipping_lastname'] = $this->session->data['dpd']['parcelshop_company'];
+                $order_data['shipping_company'] = '';
+                $order_data['shipping_address_1'] = $this->session->data['dpd']['parcelshop_street'];
+                $order_data['shipping_address_2'] = '';
+                $order_data['shipping_postcode'] = $this->session->data['dpd']['parcelshop_zipcode'];
+                $order_data['shipping_city'] = $this->session->data['dpd']['parcelshop_city'];
+                $order_data['shipping_country'] = $this->session->data['dpd']['parcelshop_country'];
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->session->data['order_id']]]></search>
+            <add position="after"><![CDATA[
+            if($this->session->data['shipping_method']['code'] === 'dpdbenelux.parcelshop')
+            {
+                $this->load->model('extension/shipping/dpd_order_parcelshop');
+
+                $this->model_extension_shipping_dpd_order_parcelshop->addOrEditParcelshop($this->session->data['order_id'],
+                $this->session->data['dpd']['parcelshop_id'],
+                $this->session->data['dpd']['parcelshop_company'],
+                $this->session->data['dpd']['parcelshop_street'],
+                $this->session->data['dpd']['parcelshop_zipcode'],
+                $this->session->data['dpd']['parcelshop_city'],
+                $this->session->data['dpd']['parcelshop_country']);
+            }
+            ]]></add>
+        </operation>
+
+    </file>
+    <file path="admin/view/template/sale/order_list.twig">
+        <operation>
+            <search><![CDATA[<button type="submit" id="button-shipping"]]></search>
+            <add position="before"><![CDATA[
+            {# Insert by Dpd Benelux Shipping Plugin #}
+            <button type="submit" id="button-dpd-labels-generate" form="form-order" formaction="{{ dpd_labels_generate }}" data-toggle="tooltip" title="{{ dpd_language.get('text_generate') }} DPD Labels" class="btn btn-danger"><i class="fa fa-cogs"></i> DPD Labels</button>
+            <button type="submit" id="button-dpd-labels-download" form="form-order" formaction="{{ dpd_labels_download }}" data-toggle="tooltip" title="Download DPD Labels" class="btn btn-danger"><i class="fa fa-download"></i> DPD Labels</button>
+            <button type="submit" id="button-dpd-return-labels-generate" form="form-order" formaction="{{ dpd_return_labels_generate }}" data-toggle="tooltip" title="{{ dpd_language.get('text_generate') }} {{ dpd_language.get('button_dpd_return_label') }}" class="btn btn-danger"><i class="fa fa-cogs"></i> {{ dpd_language.get('button_dpd_return_label') }}</button>
+            <button type="submit" id="button-dpd-return-labels-download" form="form-order" formaction="{{ dpd_return_labels_download }}" data-toggle="tooltip" title="Download {{ dpd_language.get('button_dpd_return_label') }}" class="btn btn-danger"><i class="fa fa-download"></i> {{ dpd_language.get('button_dpd_return_label') }}</button>
+            <button type="submit" id="button-dpd-generate-shipping-list" form="form-order" formaction="{{ dpd_generate_shipping_list }}" data-toggle="tooltip" title="{{ dpd_language.get('button_dpd_generate_shipping_list') }}" class="btn btn-danger"><i class="fa fa-truck"></i> DPD</button>
+            {# End Insert by Dpd Benelux Shipping Plugin #}
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[<td class="text-right">{% if sort == 'o.total' %}]]></search>
+            <add position="before"><![CDATA[
+                      {# Insert by Dpd Benelux Shipping Plugin #}
+                      <td class="text-left" style="white-space: nowrap"><image src="view/image/shipping/dpd.png" style="width: 20px"></image> {{ dpd_language.get('text_parcels') }}</td>
+                      <td class="text-left" style="white-space: nowrap"><image src="view/image/shipping/dpd.png" style="width: 20px"></image> {{ dpd_language.get('text_status') }}</td>
+                      {# End Insert by Dpd Benelux Shipping Plugin #}
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[<td class="text-right">{{ order.total }}</td>]]></search>
+            <add position="before"><![CDATA[
+                    {# Insert by Dpd Benelux Shipping Plugin #}
+                    <td class="text-left">
+                        {% if order.dpd.labels.0 is defined %}
+                            <div style="white-space: nowrap;">
+                                <a href="{{ order.dpd.download_url.0 }}" title="Download {{ dpd_language.get('button_dpd_shipping_label') }}">
+                                    <i class="fa fa-share"></i> {{ order.dpd.labels.0 }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        {% if order.dpd.labels.1 is defined %}
+                            <div style="white-space: nowrap;" >
+                                <a href="{{ order.dpd.download_url.1 }}" title="Download {{ dpd_language.get('button_dpd_return_label') }}">
+                                    <i class="fa fa-reply"></i> {{ order.dpd.labels.1 }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        {% if order.dpd.shipping_method_title is defined %}
+                            {{ order.dpd.shipping_method_title }}
+                        {% endif %}
+                    </td>
+                    <td class="text-left" style="padding: 0px;">
+                        {% if order.dpd.status.0 is defined %}
+                            <div style="white-space: nowrap; color: white; padding: 4px; background: {{ dpd_status_colors[order.dpd.status.0] }}"{% if order.dpd.status.0 == 'status_failed' %} title="{{ order.dpd.errors.0 }}"{% endif %}>
+                                &nbsp;<i class="fa fa-share"></i> {{ dpd_language.get('text_' ~ order.dpd.status.0) }}&nbsp;
+                            </div>
+                        {% endif %}
+                        {% if order.dpd.status.1 is defined %}
+                            <div style="white-space: nowrap; color: white; padding: 4px; background: {{ dpd_status_colors[order.dpd.status.1] }}"{% if order.dpd.status.1 == 'status_failed' %} title="{{ order.dpd.errors.1 }}"{% endif %}>
+                                &nbsp;<i class="fa fa-reply"></i> {{ dpd_language.get('text_' ~ order.dpd.status.1) }}&nbsp;
+                            </div>
+                        {% endif %}
+                    </td>
+                    {# End Insert by Dpd Benelux Shipping Plugin #}
+            ]]></add>
+        </operation>
+
+    </file>
+    <file path="admin/view/template/sale/order_info.twig">
+        <operation>
+            <search><![CDATA[<div class="pull-right"><a href="{{ invoice }}" target="_blank" data-toggle="tooltip"]]></search>
+            <add position="replace"><![CDATA[
+             {# Replaced by Dpd Benelux Shipping Plugin #}
+             <div class="pull-right">
+                <a id="link-order-dpd-label-generate" href="#" data-href="{{ dpd_labels_generate }}" data-toggle="modal" data-target="#dpd-confirm-generate" title="{{ dpd_language.get('text_generate') }} DPD Labels" class="btn btn-danger{% if dpd_shipment_with_customs and dpd_labels_download %} disabled{% endif %}"><i class="fa fa-cogs"></i> DPD Labels</a>
+
+                <a  id="link-order-dpd-label-download" href="{{ dpd_labels_download }}" title="Download DPD Labels" class="btn btn-danger{% if dpd_labels_download is empty %} disabled{% endif %}" ><i class="fa fa-download"></i></i> DPD Labels</a>
+
+                <a id="link-order-dpd-return-label-generate" href="#" data-href="{{ dpd_return_labels_generate }}" data-toggle="modal" data-target="#dpd-confirm-generate" title="{{ dpd_language.get('text_generate') }} {{ dpd_language.get('button_dpd_return_label') }}" class="btn btn-danger{% if dpd_shipment_with_customs and dpd_return_labels_download %} disabled{% endif %}"><i class="fa fa-cogs"></i> {{ dpd_language.get('button_dpd_return_label') }}</a>
+                <a id="link-order-dpd-return-label-download" href="{{ dpd_return_labels_download }}" title="Download {{ dpd_language.get('button_dpd_return_label') }}" class="btn btn-danger{% if dpd_return_labels_download is empty %} disabled{% endif %}"><i class="fa fa-download"></i> {{ dpd_language.get('button_dpd_return_label') }}</a>
+
+                <a href="{{ invoice }}" target="_blank" data-toggle="tooltip"{# End Replaced by Dpd Benelux Shipping Plugin #}]]>
+            </add>
+        </operation>
+        <operation>
+            <search><![CDATA[<ul class="breadcrumb">]]></search>
+            <add position="before"><![CDATA[
+            {# Insert by Dpd Benelux Shipping Plugin #}
+            <script>
+                $(document).ready(function() {
+                    $('#dpd-confirm-generate').on('show.bs.modal', function(e) {
+                        $(this).data('href', $(e.relatedTarget).data('href'));
+
+
+                        if({{ dpd_shipment_with_customs }}) {
+                            dpd_generate();
+                            return false;
+                        }
+                    });
+
+                    $('#dpd-confirm-generate').find('.btn-ok').on('click', dpd_generate);
+                });
+
+                function dpd_generate() {
+                    url = $('#dpd-confirm-generate').data('href');
+                    url = url + '&parcels=' + $('#dpd_number_of_parcels').val();
+
+                    var refreshUrl = document.location.href;
+                    document.location.href = url;
+                    setTimeout(function() {
+                        window.location.reload(true);
+                    }, 5000);
+
+                    //window.open(url);
+                    return true;
+                }
+            </script>
+            <div class="modal fade" id="dpd-confirm-generate" tabindex="-1" role="dialog" aria-hidden="true">
+               <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            Parcels
+                        </div>
+                        <div class="modal-body">
+                            {{ dpd_language.get('text_number_of_parcels') }}
+                            <input type="number" name="dpd_number_of_parcels" id="dpd_number_of_parcels" value="1"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <a class="btn btn-primary btn-ok" data-dismiss="modal">{{ dpd_language.get('button_confirm') }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {# End Insert by Dpd Benelux Shipping Plugin #}
+           ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[<div class="row">]]></search>
+            <add position="before"><![CDATA[
+
+                  {# Insert by Dpd Benelux Shipping Plugin #}
+                  {% if dpd_error %} {# .alert is removed by javascript at the bottom so we inline its styles here #}
+                    <div class="alert-danger" style="padding: 10px; margin-bottom: 18px; border: 1px solid transparent; border-radius: 3px;">
+                      <i class="fa fa-exclamation-circle"></i> {{ dpd_error }}
+                    </div>
+                  {% endif %}
+                  {% if dpd_success %}
+                    <div class="alert-success" style="padding: 10px; margin-bottom: 18px; border: 1px solid transparent; border-radius: 3px;">
+                      <i class="fa fa-check-circle"></i> {{ dpd_success }}
+                    </div>
+                  {% endif %}
+                  {# End Insert by Dpd Benelux Shipping Plugin #}
+
+           ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[<td>{{ shipping_method }}</td>]]></search>
+            <add position="after"><![CDATA[
+                {# Insert by Dpd Benelux Shipping Plugin #}
+                {% if dpd is defined and dpd is empty %}
+                  </tr>
+                  <tr>
+                    <td><image src="view/image/shipping/dpd.png" style="width: 26px"></image>
+                    <td>{{ dpd_language.get('text_labels_not_yet_generated') }}</td>
+                {% endif %}
+                {% if dpd.labels.0 is defined %}
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="z-index: 3; position: absolute; color: #222; padding-left: 10px" title="{{ dpd_language.get('button_dpd_shipping_label') }}"><i class="fa fa-share"></i></div>
+                      <image src="view/image/shipping/dpd.png" style="width: 22px; opacity: 0.5;"></image>
+                    </td>
+                    <td style="white-space: nowrap; background: rgb(60, 147, 60)">
+                        <a href="{{ dpd.download_url.0 }}" style="color: white" title="Download {{ dpd_language.get('button_dpd_shipping_label') }}">{{ dpd.labels.0 }}</a>
+                    </td>
+                {% endif %}
+                {% if dpd.labels.1 is defined %}
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="z-index: 3; position: absolute; color: #222; padding-left: 10px" title="{{ dpd_language.get('button_dpd_return_label') }}"><i class="fa fa-reply"></i></div>
+                      <image src="view/image/shipping/dpd.png" style="width: 22px; opacity: 0.5;"></image>
+                    </td>
+                    <td style="white-space: nowrap; background: rgb(60, 147, 60)">
+                      <a href="{{ dpd.download_url.1 }}" style="color: white" title="Download {{ dpd_language.get('button_dpd_return_label') }}">{{ dpd.labels.1 }}</a>
+                    </td>
+                {% endif %}
+                {% if dpd.status.0 is defined and dpd.status.0 != 'status_success' %}
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="z-index: 3; position: absolute; color: #222; padding-left: 10px" title="{{ dpd_language.get('button_dpd_shipping_label') }}"><i class="fa fa-share"></i></div>
+                      <image src="view/image/shipping/dpd.png" style="width: 22px; opacity: 0.5;"></image>
+                    </td>
+                    <td style="color: white; background: {{ dpd_status_colors[dpd.status.0] }}">
+                        {% if dpd.status.0 == 'status_failed' %}{{ dpd.errors.0 }}{% else %}{{ dpd_language.get('text_' ~ dpd.status.0) }}&nbsp;{% endif %}
+                    </td>
+                {% endif %}
+                {% if dpd.status.1 is defined and dpd.status.1 != 'status_success' %}
+                  </tr>
+                  <tr>
+                    <td>
+                      <div style="z-index: 3; position: absolute; color: #222; padding-left: 10px" title="{{ dpd_language.get('button_dpd_return_label') }}"><i class="fa fa-reply"></i></div>
+                      <image src="view/image/shipping/dpd.png" style="width: 22px; opacity: 0.5;"></image>
+                    </td>
+                    <td style="color: white; background: {{ dpd_status_colors[dpd.status.1] }}">
+                        {% if dpd.status.1 == 'status_failed' %}{{ dpd.errors.1 }}{% else %}{{ dpd_language.get('text_' ~ dpd.status.1) }}&nbsp;{% endif %}
+                    </td>
+                {% endif %}
+                {% if dpd.shipment_history_count > 0 %}
+                  </tr>
+                  <tr>
+                  <td>
+                    <image src="view/image/shipping/dpd.png" style="width: 22px; opacity: 1;"></image>
+                  </td>
+                  <td>
+                    <a href="{{ dpd.shipment_history_url }}" title="{{ dpd_language.get('title_shipment_history') }}">{{ dpd_language.get('text_shipment_history') }} ({{ dpd.shipment_history_count }})</a>
+                  </td>
+                {% endif %}
+                {# End Insert by Dpd Benelux Shipping Plugin #}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/sale/order.php">
+        <operation>
+            <search><![CDATA[if (isset($this->error['warning'])) {]]></search>
+            <add position="before"><![CDATA[
+            # Insert by Dpd Benelux Shipping Plugin
+            $this->document->addScript('view/javascript/dpd/dpdhelper.js');
+
+            $this->load->language('extension/shipping/dpdbenelux', 'dpdbenelux');
+            $this->load->model('extension/shipping/dpd_shipment');
+            $this->load->model('extension/shipping/dpd_batch');
+            $this->load->library('dpd/dpdauthentication');
+            $this->load->library('dpd/dpd_autoload');
+            $this->registry->get('dpd_autoload')->start();
+            $dpdUrlGenerator = new \DpdConnect\Common\UrlGenerator($this->url, $this->session->data['user_token']);
+
+            $data['dpd_language'] = $this->language->get('dpdbenelux');
+            $data['dpd_status_colors'] = \DpdConnect\Label\Action\ShipmentListAction::getStatusColors();
+
+            $data['dpd_labels_generate'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/generate-label', '', true);
+            $data['dpd_labels_download'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/download-label', '', true);
+            $data['dpd_return_labels_generate'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/generate-label', 'return-only=1', true);
+            $data['dpd_return_labels_download'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/download-label', 'return-only=1', true);
+            $data['dpd_generate_shipping_list'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/generate-shippinglist', '', true);
+
+            if (!isset($this->error['warning']) && isset($this->session->data['warning'])) {
+                $this->error['warning'] = $this->session->data['warning'];
+                $this->session->data['warning'] = null;
+            }
+
+            $jobStateManager = new \DpdConnect\Label\JobStateManager(
+                $this->model_extension_shipping_dpd_shipment,
+                $this->model_extension_shipping_dpd_batch,
+                $this->registry->get('log'),
+                $this->dpdauthentication
+            );
+            $transformer = new \DpdConnect\Label\OrderViewDataTransformer(
+                $this->model_extension_shipping_dpd_shipment,
+                $dpdUrlGenerator,
+                $this->config,
+                $jobStateManager,
+                $this->dpdauthentication
+            );
+            foreach ($data['orders'] as $i => $dpdOrderData) {
+                $data['orders'][$i]['dpd'] = $transformer->transform($results[$i]);
+            }
+            # End Insert by Dpd Benelux Shipping Plugin
+            ]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA[$data['shipping'] = $this->url->link('sale/order/shipping', 'user_token=' . $this->session->data['user_token'] . '&order_id=' . (int)$this->request->get['order_id'], true);]]></search>
+            <add position="before"><![CDATA[
+            # Insert by Dpd Benelux Shipping Plugin
+            $this->document->addScript('view/javascript/dpd/dpdhelper.js');
+
+            $this->load->language('extension/shipping/dpdbenelux', 'dpdbenelux');
+            $this->load->model('extension/shipping/dpd_shipment');
+            $this->load->model('extension/shipping/dpd_batch');
+            $this->load->library('dpd/dpdauthentication');
+            $this->load->library('dpd/dpd_autoload');
+            $this->registry->get('dpd_autoload')->start();
+            $dpdUrlGenerator = new \DpdConnect\Common\UrlGenerator($this->url, $this->session->data['user_token']);
+
+            $data['dpd_language'] = $this->language->get('dpdbenelux');
+            $data['dpd_status_colors'] = \DpdConnect\Label\Action\ShipmentListAction::getStatusColors();
+
+            $data['dpd_labels_generate'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/generate-label',
+                 'order_id=' . (int)$this->request->get['order_id'],
+                true);
+            $dpdShipment = $this->model_extension_shipping_dpd_shipment->getShipment((int)$this->request->get['order_id'], false);
+            if (!empty($dpdShipment['mps_id'])) {
+                $data['dpd_labels_download'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/download-label',
+                    'order_id=' . (int)$this->request->get['order_id'],
+                    true);
+            }
+
+            $data['dpd_return_labels_generate'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/generate-label',
+                'order_id=' . (int)$this->request->get['order_id'] . '&return-only=1',
+                true);
+            $dpdShipment = $this->model_extension_shipping_dpd_shipment->getShipment((int)$this->request->get['order_id'], true);
+            if (!empty($dpdShipment['mps_id'])) {
+                $data['dpd_return_labels_download'] = $dpdUrlGenerator->link('extension/shipping/dpdbenelux/download-label',
+                    'order_id=' . (int)$this->request->get['order_id'] . '&return-only=1',
+                    true);
+            }
+
+            $jobStateManager = new \DpdConnect\Label\JobStateManager(
+                $this->model_extension_shipping_dpd_shipment,
+                $this->model_extension_shipping_dpd_batch,
+                $this->registry->get('log'),
+                $this->dpdauthentication
+            );
+            $transformer = new \DpdConnect\Label\OrderViewDataTransformer(
+                $this->model_extension_shipping_dpd_shipment,
+                $dpdUrlGenerator,
+                $this->config,
+                $jobStateManager,
+                $this->dpdauthentication
+            );
+            $data['dpd'] = $transformer->transform($order_info);
+            try {
+                $data['dpd_shipment_with_customs'] = (int)$transformer->isShipmentWithCustoms($order_info);
+            } catch (\DpdConnect\Sdk\Exceptions\DpdException $e) {
+                $data['dpd_error'] = strlen($e->getMessage()) == 0 ? get_class($e) : $e->getMessage();
+            }
+            if (isset($this->session->data['warning'])) {
+                $data['dpd_error'] = $this->session->data['warning'];
+                unset($this->session->data['warning']);
+            }
+            if (isset($this->session->data['success'])) {
+               $data['dpd_success'] = $this->session->data['success'];
+               unset($this->session->data['success']);
+            }
+            # End Insert by Dpd Benelux Shipping Plugin
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/common/column_left.php">
+        <operation>
+            <search><![CDATA[if ($this->user->hasPermission('access', 'sale/recurring')) {]]></search>
+            <add position="before"><![CDATA[
+                # Insert by Dpd Benelux Shipping Plugin
+                if ($this->user->hasPermission('access', 'sale/order')) {
+                    $this->load->language('extension/shipping/dpdbenelux', 'dpdbenelux');
+                    $sale[] = array(
+                        'name'	   => $this->language->get('dpdbenelux')->get('entry_title'),
+                        'href'     => $this->url->link('extension/shipping/dpdbenelux/batches', 'user_token=' . $this->session->data['user_token'], true),
+                        'children' => array()
+                    );
+                }
+                # End Insert by Dpd Benelux Shipping Plugin
+                ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="admin/view/template/catalog/product_form.twig">
+        <operation>
+            <search><![CDATA[<button type="submit" form="form-product" data-toggle="tooltip" title="{{ button_save }}"]]></search>
+            <add position="before"><![CDATA[
+                {# Insert by Dpd Benelux Shipping Plugin #}
+                <button type="button" id="button-dpd-edit-product-data" data-href="{{ dpd_url_edit_product_data }}" data-toggle="tooltip" title="{{ dpd_language.get('button_dpd_edit_product_data') }}" class="btn btn-default"><image src="view/image/shipping/dpd.png" style="width: 19px; opacity: 1;"></image></button>
+                {# End Insert by Dpd Benelux Shipping Plugin #}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/catalog/product.php">
+        <operation>
+            <search><![CDATA[$this->load->model('design/layout');]]></search>
+            <add position="before"><![CDATA[
+                # Insert by Dpd Benelux Shipping Plugin
+        $this->document->addScript('view/javascript/dpd/dpd_product_data.js');
+
+        $this->load->language('extension/shipping/dpdbenelux', 'dpdbenelux');
+        $data['dpd_language'] = $this->language->get('dpdbenelux');
+        $data['dpd_url_edit_product_data'] = $this->url->link('extension/shipping/dpdbenelux/edit-product-data', 'user_token=' . $this->session->data['user_token']. '&product_id='. urlencode($this->request->get['product_id']), true);
+        # End Insert by Dpd Benelux Shipping Plugin
+
+            ]]></add>
+        </operation>
+    </file>
+</modification>
