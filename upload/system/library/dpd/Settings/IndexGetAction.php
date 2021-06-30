@@ -32,7 +32,7 @@ class IndexGetAction
         'status', 'url', 'username', 'sending_depot', 'account_type', 'environment', 'paper_format','enable_scp_ncp_choice',
         'include_return_label', 'asynchronous', 'asynchronous_from', 'weight_default',
         'sender_company_name', 'sender_street', 'sender_postal_code', 'sender_place', 'sender_country_code',
-        'sender_phone', 'consignor_eori_number',
+        'sender_phone', 'consignor_eori_number', 'age_check_attribute_source',
         'export_hsc_source', 'export_hsc_default', 'export_value_source', 'export_origin_country_source',
         'export_origin_country_default', 'export_vat_number_source',
         ];

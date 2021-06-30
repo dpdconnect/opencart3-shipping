@@ -206,11 +206,23 @@ class LabelRequestFactory
             if (($orderData['shipping_code'] == 'dpdbenelux.saturday' || $orderData['shipping_code'] == 'dpdbenelux.predict')) {
                 $productAndServiceData['homeDelivery'] = true;
             }
+            $productAndServiceData['ageCheck'] = $this->checkIfAgeCheck($orderData);
         }
 
         $productAndServiceData['productCode'] = $product;
 
         return $productAndServiceData;
+    }
+
+    private function checkIfAgeCheck($orderData)
+    {
+        foreach ($orderData['dpdRows'] as $i => $row) {
+            if($this->getAttributeOrExtensionValue($row, 'age_check_attribute')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function getNotifications($orderData, $isReturnLabel)
@@ -423,6 +435,7 @@ class LabelRequestFactory
     public function getAttributeOrExtensionValue($row, $field)
     {
         $attributeId = $this->config->get('shipping_dpdbenelux_'. $field. '_source');
+
         if (!empty($attributeId)) {
             foreach ($row['dpdAttributes'] as $attribute) {
                 if ($attribute['attribute_id'] == $attributeId) {
